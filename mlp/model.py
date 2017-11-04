@@ -14,43 +14,16 @@ class Model:
 
         # TODO:  implement input -- Linear -- BN -- ReLU -- Linear -- loss
         #        the 10-class prediction output is named as "logits"
-        # W_fc1 = weight_variable([28 * 28, 10])
-        # b_fc1 = bias_variable([10])
+        W_fc1 = weight_variable([28 * 28, 1000])
+        b_fc1 = bias_variable([1000])
 
-        # #x_image = tf.reshape(self.x_, [-1,28,28,1])
-        # print(self.x_.shape)
-        # logits = tf.matmul(self.x_, W_fc1) + b_fc1
-        # print(logits.shape)
-        # h_fc1 = tf.nn.relu(tf.matmul(self.x_, W_fc1) + b_fc1)
+        h_relu1 = tf.matmul(self.x_, W_fc1) + b_fc1
+        h_fc1 = tf.nn.relu(h_relu1)
 
-        # y = tf.nn.softmax(h_fc1)
+        w_fc2 = weight_variable([1000, 10])
+        b_fc2 = bias_variable([10])
 
-        # self.W1 = weight_variable(shape = [784, 1024])
-        # self.b1 = bias_variable(shape = [1024])
-
-        # self.u1 = tf.matmul(self.x_, self.W1) + self.b1
-        # self.y1 = tf.nn.relu(self.u1)
-
-        # logits = self.y1
-
-        self.W1 = weight_variable(shape = [784, 1024])
-        self.b1 = bias_variable(shape = [1024])
-
-        self.u1 = tf.matmul(self.x_, self.W1) + self.b1
-        self.y1 = tf.nn.relu(self.u1)
-
-        self.W2 = weight_variable(shape = [1024, 300])
-        self.b2 = bias_variable(shape = [300])
-
-        self.u2 = tf.matmul(self.y1, self.W2) + self.b2
-        self.y2 = tf.nn.relu(self.u2)
-
-        self.W3 = weight_variable(shape = [300, 10])
-        self.b3 = bias_variable(shape = [10])
-        logits = tf.matmul(self.y2, self.W3) + self.b3
-
-        #logits = tf.Variable(tf.constant(0.0, shape=[100, 10]))  # deleted this line after you implement above layers
-        #logits = tf.Variable(tf.constant(0.0, shape=[100, 10]))
+        logits = tf.matmul(h_fc1, w_fc2) + b_fc2
 
         self.loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=self.y_, logits=logits))
         self.correct_pred = tf.equal(tf.cast(tf.argmax(logits, 1), tf.int32), self.y_)

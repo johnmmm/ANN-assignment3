@@ -4,9 +4,15 @@ import tensorflow as tf
 import numpy as np
 import os
 import time
+import csv
 from model import Model
 from load_data import load_mnist_2d
 from model import *
+
+c=open("csv/dan.csv","w")
+writer=csv.writer(c)
+writer.writerow(['time','learning rate','training loss', 'validation loss', 'validation accuracy', 
+                    'best epoch', 'best validation accuracy', 'test loss', 'test accuracy'])
 
 tf.app.flags.DEFINE_integer("batch_size", 100, "batch size for training")
 tf.app.flags.DEFINE_integer("num_epochs", 100, "number of epochs")
@@ -112,6 +118,18 @@ with tf.Session() as sess:
             print("  best validation accuracy:      " + str(best_val_acc))
             print("  test loss:                     " + str(test_loss))
             print("  test accuracy:                 " + str(test_acc))
+
+            rlist=[]
+            rlist.append(epoch_time)
+            rlist.append(mlp_model.learning_rate.eval())
+            rlist.append(train_loss)
+            rlist.append(val_loss)
+            rlist.append(val_acc)
+            rlist.append(best_epoch)
+            rlist.append(best_val_acc)
+            rlist.append(test_loss)
+            rlist.append(test_acc)
+            writer.writerow(rlist)
 
             if train_loss > max(pre_losses):  # Learning rate decay
                 sess.run(mlp_model.learning_rate_decay_op)
