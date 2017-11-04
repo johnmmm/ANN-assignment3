@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import tensorflow as tf
+from tensorflow.python.ops import control_flow_ops  
+from tensorflow.python.training import moving_averages 
 
 
 class Model:
@@ -17,31 +19,32 @@ class Model:
         # TODO: implement input -- Conv -- BN -- ReLU -- MaxPool -- Conv -- BN -- ReLU -- MaxPool -- Linear -- loss
         #        the 10-class prediction output is named as "logits"
 
-        W_conv1 = weight_variable([5, 5, 1, 32])
-        b_conv1 = bias_variable([32])
+        #第一个卷积
+        W_conv1 = weight_variable([5, 5, 1, 4])
+        b_conv1 = bias_variable([4])
 
-        h_conv1 = tf.nn.relu(conv2d(x, W_conv1) + b_conv1)
-        h_pool1 = max_pool_2x2(h_conv1)
+        h_conv1 = conv2d(x, W_conv1) + b_conv1
+        h_bn1 = batch_normalization_layer(h_conv1)
 
-        W_conv2 = weight_variable([5, 5, 32, 64])
-        b_conv2 = bias_variable([64])
+        h_relu1 = tf.nn.relu(h_bn1)
+        h_pool1 = max_pool_2x2(h_relu1)
 
-        h_conv2 = tf.nn.relu(conv2d(h_pool1, W_conv2) + b_conv2)
-        h_pool2 = max_pool_2x2(h_conv2)
+        #第二个卷积
+        W_conv2 = weight_variable([5, 5, 4, 8])
+        b_conv2 = bias_variable([8])
 
-        W_fc1 = weight_variable([7 * 7 * 64, 10])
+        h_conv2 = conv2d(h_pool1, W_conv2) + b_conv2
+        h_bn2 = batch_normalization_layer(h_conv2)
+
+        h_relu2 = tf.nn.relu(h_conv2)
+        h_pool2 = max_pool_2x2(h_relu2)
+
+        #Linear
+        W_fc1 = weight_variable([7 * 7 * 8, 10])
         b_fc1 = bias_variable([10])
 
-        h_pool2_flat = tf.reshape(h_pool2, [-1, 7*7*64])
+        h_pool2_flat = tf.reshape(h_pool2, [-1, 7*7*8])
         logits = tf.matmul(h_pool2_flat, W_fc1) + b_fc1
-
-        # W_fc2 = weight_variable([196, 10])
-        # b_fc2 = bias_variable([10])
-
-        # logits = tf.matmul(h_fc1, W_fc2) + b_fc2
-
-
-        #logits = tf.Variable(tf.constant(0.0, shape=[100, 10]))  # deleted this line after you implement above layers
 
         self.loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=self.y_, logits=logits))
         self.correct_pred = tf.equal(tf.cast(tf.argmax(logits, 1), tf.int32), self.y_)
