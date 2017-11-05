@@ -9,7 +9,7 @@ from model import Model
 from load_data import load_mnist_2d
 from model import *
 
-c=open("csv/dan.csv","w")
+c=open("csv/drop1.csv","w")
 writer=csv.writer(c)
 writer.writerow(['time','learning rate','training loss', 'validation loss', 'validation accuracy', 
                     'best epoch', 'best validation accuracy', 'test loss', 'test accuracy'])

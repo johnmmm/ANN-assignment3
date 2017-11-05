@@ -6,8 +6,8 @@ import tensorflow as tf
 class Model:
     def __init__(self,
                  is_train,
-                 learning_rate=0.008,
-                 learning_rate_decay_factor=0.95):
+                 learning_rate=0.001,
+                 learning_rate_decay_factor=0.995):
         self.x_ = tf.placeholder(tf.float32, [None, 28*28])
         self.y_ = tf.placeholder(tf.int32, [None])
         self.keep_prob = tf.placeholder(tf.float32)
@@ -20,10 +20,12 @@ class Model:
         h_relu1 = tf.matmul(self.x_, W_fc1) + b_fc1
         h_fc1 = tf.nn.relu(h_relu1)
 
+        h_fc1_drop = tf.nn.dropout(h_fc1, self.keep_prob)
+
         w_fc2 = weight_variable([1000, 10])
         b_fc2 = bias_variable([10])
 
-        logits = tf.matmul(h_fc1, w_fc2) + b_fc2
+        logits = tf.matmul(h_fc1_drop, w_fc2) + b_fc2
 
         self.loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=self.y_, logits=logits))
         self.correct_pred = tf.equal(tf.cast(tf.argmax(logits, 1), tf.int32), self.y_)
@@ -52,8 +54,16 @@ def bias_variable(shape):  # you can use this func to build new variables
     return tf.Variable(initial)
 
 
-def batch_normalization_layer(inputs, isTrain=True):
+def batch_normalization_layer(inputs, scale, offset, ave_mean = None, ave_var = None, isTrain=True):
     # TODO: implemented the batch normalization func and applied it on fully-connected layers
+    EPSILON = 0.001
+    if isTrain:
+        mean, var = tf.nn.moments(inputs, axes = 0, keep_dims = True)
+        inputs = tf.nn.batch_normalization(inputs, mean = mean, variance = var, offset = offset, scale = scale, variance_epsilon = EPSILON)
+
+    else :
+        inputs = tf.nn.batch_normalization(inputs, mean = ave_mean, variance = ave_var, offset = offset, scale = scale, variance_epsilon = EPSILON)
+    
     return inputs
 
 
