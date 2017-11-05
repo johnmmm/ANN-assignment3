@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import tensorflow as tf
+from tensorflow.python.ops import control_flow_ops  
+from tensorflow.python.training import moving_averages 
 
 
 class Model:
@@ -17,15 +19,19 @@ class Model:
         W_fc1 = weight_variable([28 * 28, 1000])
         b_fc1 = bias_variable([1000])
 
-        h_relu1 = tf.matmul(self.x_, W_fc1) + b_fc1
-        h_fc1 = tf.nn.relu(h_relu1)
+        h_fc1 = tf.matmul(self.x_, W_fc1) + b_fc1
 
-        h_fc1_drop = tf.nn.dropout(h_fc1, self.keep_prob)
+        # perform batch-normalization
+        h_bn1 = batch_normalization_layer(h_fc1, isTrain = is_train)
+
+        h_relu1 = tf.nn.relu(h_bn1)
+
+        # h_fc1_drop = tf.nn.dropout(h_fc1, self.keep_prob)
 
         w_fc2 = weight_variable([1000, 10])
         b_fc2 = bias_variable([10])
 
-        logits = tf.matmul(h_fc1_drop, w_fc2) + b_fc2
+        logits = tf.matmul(h_relu1, w_fc2) + b_fc2
 
         self.loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=self.y_, logits=logits))
         self.correct_pred = tf.equal(tf.cast(tf.argmax(logits, 1), tf.int32), self.y_)
@@ -54,11 +60,32 @@ def bias_variable(shape):  # you can use this func to build new variables
     return tf.Variable(initial)
 
 
-def batch_normalization_layer(inputs, scale, offset, ave_mean = None, ave_var = None, isTrain=True):
+def batch_normalization_layer(inputs, isTrain=True):
     # TODO: implemented the batch normalization func and applied it on fully-connected layers
     EPSILON = 0.001
+    SHAPES = inputs.shape[1]
+    MEANDECAY = 0.999
+
+    ave_mean = tf.Variable(tf.zeros(shape = [1, SHAPES]), trainable = False)
+    ave_var = tf.Variable(tf.zeros(shape = [1, SHAPES]), trainable = False)
+
+    inputs_shape = inputs.get_shape() 
+    axis = list(range(len(inputs_shape) - 1))
+    mean, var = tf.nn.moments(inputs, axes = axis, keep_dims = True)
+
+    #batch_size = tf.to_float(tf.shape(inputs)[0])
+
+    update_mean_op = moving_averages.assign_moving_average(ave_mean, mean, MEANDECAY)
+    update_var_op = moving_averages.assign_moving_average(ave_var, var, MEANDECAY)
+    # update_mean_op = ave_mean.assign(ave_mean * MEANDECAY + mean * (1. - MEANDECAY))
+    # update_var_op = ave_var.assign(ave_var * MEANDECAY + var * batch_size / (batch_size - 1.) * (1. - MEANDECAY))
+    tf.add_to_collection("update_op", update_mean_op)
+    tf.add_to_collection("update_op", update_var_op)
+    
+    scale = tf.Variable(tf.constant(1., shape = mean.shape))
+    offset = tf.Variable(tf.constant(0., shape = mean.shape))
+
     if isTrain:
-        mean, var = tf.nn.moments(inputs, axes = 0, keep_dims = True)
         inputs = tf.nn.batch_normalization(inputs, mean = mean, variance = var, offset = offset, scale = scale, variance_epsilon = EPSILON)
 
     else :

@@ -9,7 +9,7 @@ from model import Model
 from load_data import load_mnist_2d
 from model import *
 
-c=open("csv/drop1.csv","w")
+c=open("csv/test.csv","w")
 writer=csv.writer(c)
 writer.writerow(['time','learning rate','training loss', 'validation loss', 'validation accuracy', 
                     'best epoch', 'best validation accuracy', 'test loss', 'test accuracy'])
@@ -17,7 +17,7 @@ writer.writerow(['time','learning rate','training loss', 'validation loss', 'val
 tf.app.flags.DEFINE_integer("batch_size", 100, "batch size for training")
 tf.app.flags.DEFINE_integer("num_epochs", 100, "number of epochs")
 tf.app.flags.DEFINE_float("keep_prob", 0.5, "drop out rate")
-tf.app.flags.DEFINE_boolean("is_train", True, "False to inference")
+tf.app.flags.DEFINE_boolean("is_train", False, "False to inference")
 tf.app.flags.DEFINE_string("data_dir", "./MNIST_data", "data dir")
 tf.app.flags.DEFINE_string("train_dir", "./train", "training dir")
 tf.app.flags.DEFINE_integer("inference_version", 0, "the version for inferencing")
@@ -76,7 +76,7 @@ def valid_epoch(model, sess, X, y):  # Valid Process
 
 
 def inference(model, sess, X):  # Test Process
-    return sess.run([model.pred], {model.x_: X})[0]
+    return sess.run([model.pred], {model.x_: X, model.keep_prob: 1.0})[0]
 
 
 with tf.Session() as sess:
