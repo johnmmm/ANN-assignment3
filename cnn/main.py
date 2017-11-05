@@ -9,6 +9,8 @@ import csv
 from model import Model
 from load_data import load_mnist_4d
 
+if not os.path.exists("csv"):
+    os.mkdir("csv")
 c=open("csv/dan.csv","w")
 writer=csv.writer(c)
 writer.writerow(['time','learning rate','training loss', 'validation loss', 'validation accuracy', 
@@ -17,7 +19,7 @@ writer.writerow(['time','learning rate','training loss', 'validation loss', 'val
 tf.app.flags.DEFINE_integer("batch_size", 100, "batch size for training")
 tf.app.flags.DEFINE_integer("num_epochs", 20, "number of epochs")
 tf.app.flags.DEFINE_float("keep_prob", 0.5, "drop out rate")
-tf.app.flags.DEFINE_boolean("is_train", True, "False to inference")
+tf.app.flags.DEFINE_boolean("is_train", False, "False to inference")
 tf.app.flags.DEFINE_string("data_dir", "./MNIST_data", "data dir")
 tf.app.flags.DEFINE_string("train_dir", "./train", "training dir")
 tf.app.flags.DEFINE_integer("inference_version", 0, "the param version for inference")

@@ -36,7 +36,7 @@ class Model:
         h_conv2 = conv2d(h_pool1, W_conv2) + b_conv2
         h_bn2 = batch_normalization_layer(h_conv2)
 
-        h_relu2 = tf.nn.relu(h_conv2)
+        h_relu2 = tf.nn.relu(h_bn2)
         h_pool2 = max_pool_2x2(h_relu2)
 
         #Linear
@@ -77,6 +77,35 @@ def bias_variable(shape):  # you can use this func to build new variables
 def batch_normalization_layer(inputs, isTrain=True):
     # TODO: implemented the batch normalization func and applied it on conv and fully-connected layers
     # hint: you can add extra parameters (e.g., shape) if necessary
+    EPSILON = 0.001
+    CHANNEL = inputs.shape[3]
+    MEANDECAY = 0.999
+
+    ave_mean = tf.Variable(tf.zeros(shape = [1, CHANNEL]), trainable = False)
+    ave_var = tf.Variable(tf.zeros(shape = [1, CHANNEL]), trainable = False)
+
+    inputs_shape = inputs.get_shape() 
+    axis = list(range(len(inputs_shape) - 1))
+    mean, var = tf.nn.moments(inputs, axes = [0, 1, 2], keep_dims = False)
+
+    #batch_size = tf.to_float(tf.shape(inputs)[0])
+
+    update_mean_op = moving_averages.assign_moving_average(ave_mean, mean, MEANDECAY)
+    update_var_op = moving_averages.assign_moving_average(ave_var, var, MEANDECAY)
+    # update_mean_op = ave_mean.assign(ave_mean * MEANDECAY + mean * (1. - MEANDECAY))
+    # update_var_op = ave_var.assign(ave_var * MEANDECAY + var * batch_size / (batch_size - 1.) * (1. - MEANDECAY))
+    tf.add_to_collection("update_op", update_mean_op)
+    tf.add_to_collection("update_op", update_var_op)
+    
+    scale = tf.Variable(tf.constant(1., shape = mean.shape))
+    offset = tf.Variable(tf.constant(0., shape = mean.shape))
+
+    if isTrain:
+        inputs = tf.nn.batch_normalization(inputs, mean = mean, variance = var, offset = offset, scale = scale, variance_epsilon = EPSILON)
+
+    else :
+        inputs = tf.nn.batch_normalization(inputs, mean = ave_mean, variance = ave_var, offset = offset, scale = scale, variance_epsilon = EPSILON)
+
     return inputs
 
 def conv2d(x, W):
