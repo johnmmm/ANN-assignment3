@@ -1,56 +1,37 @@
 # -*- coding: utf-8 -*-
 
 import tensorflow as tf
+from tensorflow.python.ops import control_flow_ops  
+from tensorflow.python.training import moving_averages 
 
 
 class Model:
     def __init__(self,
                  is_train,
-                 learning_rate=0.008,
-                 learning_rate_decay_factor=0.95):
+                 learning_rate=0.001,
+                 learning_rate_decay_factor=0.995):
         self.x_ = tf.placeholder(tf.float32, [None, 28*28])
         self.y_ = tf.placeholder(tf.int32, [None])
         self.keep_prob = tf.placeholder(tf.float32)
 
         # TODO:  implement input -- Linear -- BN -- ReLU -- Linear -- loss
         #        the 10-class prediction output is named as "logits"
-        # W_fc1 = weight_variable([28 * 28, 10])
-        # b_fc1 = bias_variable([10])
+        W_fc1 = weight_variable([28 * 28, 1000])
+        b_fc1 = bias_variable([1000])
 
-        # #x_image = tf.reshape(self.x_, [-1,28,28,1])
-        # print(self.x_.shape)
-        # logits = tf.matmul(self.x_, W_fc1) + b_fc1
-        # print(logits.shape)
-        # h_fc1 = tf.nn.relu(tf.matmul(self.x_, W_fc1) + b_fc1)
+        h_fc1 = tf.matmul(self.x_, W_fc1) + b_fc1
 
-        # y = tf.nn.softmax(h_fc1)
+        # perform batch-normalization
+        h_bn1 = batch_normalization_layer(h_fc1, isTrain = is_train)
 
-        # self.W1 = weight_variable(shape = [784, 1024])
-        # self.b1 = bias_variable(shape = [1024])
+        h_relu1 = tf.nn.relu(h_bn1)
 
-        # self.u1 = tf.matmul(self.x_, self.W1) + self.b1
-        # self.y1 = tf.nn.relu(self.u1)
+        # h_fc1_drop = tf.nn.dropout(h_fc1, self.keep_prob)
 
-        # logits = self.y1
+        w_fc2 = weight_variable([1000, 10])
+        b_fc2 = bias_variable([10])
 
-        self.W1 = weight_variable(shape = [784, 1024])
-        self.b1 = bias_variable(shape = [1024])
-
-        self.u1 = tf.matmul(self.x_, self.W1) + self.b1
-        self.y1 = tf.nn.relu(self.u1)
-
-        self.W2 = weight_variable(shape = [1024, 300])
-        self.b2 = bias_variable(shape = [300])
-
-        self.u2 = tf.matmul(self.y1, self.W2) + self.b2
-        self.y2 = tf.nn.relu(self.u2)
-
-        self.W3 = weight_variable(shape = [300, 10])
-        self.b3 = bias_variable(shape = [10])
-        logits = tf.matmul(self.y2, self.W3) + self.b3
-
-        #logits = tf.Variable(tf.constant(0.0, shape=[100, 10]))  # deleted this line after you implement above layers
-        #logits = tf.Variable(tf.constant(0.0, shape=[100, 10]))
+        logits = tf.matmul(h_relu1, w_fc2) + b_fc2
 
         self.loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=self.y_, logits=logits))
         self.correct_pred = tf.equal(tf.cast(tf.argmax(logits, 1), tf.int32), self.y_)
@@ -81,7 +62,33 @@ def bias_variable(shape):  # you can use this func to build new variables
 
 def batch_normalization_layer(inputs, isTrain=True):
     # TODO: implemented the batch normalization func and applied it on fully-connected layers
+    EPSILON = 0.001
+    SHAPES = inputs.shape[1]
+    MEANDECAY = 0.999
+
+    ave_mean = tf.Variable(tf.zeros(shape = [1, SHAPES]), trainable = False)
+    ave_var = tf.Variable(tf.zeros(shape = [1, SHAPES]), trainable = False)
+
+    inputs_shape = inputs.get_shape() 
+    axis = list(range(len(inputs_shape) - 1))
+    mean, var = tf.nn.moments(inputs, axes = axis, keep_dims = True)
+
+    #batch_size = tf.to_float(tf.shape(inputs)[0])
+
+    update_mean_op = moving_averages.assign_moving_average(ave_mean, mean, MEANDECAY)
+    update_var_op = moving_averages.assign_moving_average(ave_var, var, MEANDECAY)
+    # update_mean_op = ave_mean.assign(ave_mean * MEANDECAY + mean * (1. - MEANDECAY))
+    # update_var_op = ave_var.assign(ave_var * MEANDECAY + var * batch_size / (batch_size - 1.) * (1. - MEANDECAY))
+    tf.add_to_collection("update_op", update_mean_op)
+    tf.add_to_collection("update_op", update_var_op)
+    
+    scale = tf.Variable(tf.constant(1., shape = mean.shape))
+    offset = tf.Variable(tf.constant(0., shape = mean.shape))
+
+    if isTrain:
+        inputs = tf.nn.batch_normalization(inputs, mean = mean, variance = var, offset = offset, scale = scale, variance_epsilon = EPSILON)
+
+    else :
+        inputs = tf.nn.batch_normalization(inputs, mean = ave_mean, variance = ave_var, offset = offset, scale = scale, variance_epsilon = EPSILON)
+    
     return inputs
-
-
-

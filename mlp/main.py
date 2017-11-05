@@ -4,14 +4,22 @@ import tensorflow as tf
 import numpy as np
 import os
 import time
+import csv
 from model import Model
 from load_data import load_mnist_2d
 from model import *
 
+if not os.path.exists("csv"):
+    os.mkdir("csv")
+c=open("csv/test.csv","w")
+writer=csv.writer(c)
+writer.writerow(['time','learning rate','training loss', 'validation loss', 'validation accuracy', 
+                    'best epoch', 'best validation accuracy', 'test loss', 'test accuracy'])
+
 tf.app.flags.DEFINE_integer("batch_size", 100, "batch size for training")
 tf.app.flags.DEFINE_integer("num_epochs", 100, "number of epochs")
 tf.app.flags.DEFINE_float("keep_prob", 0.5, "drop out rate")
-tf.app.flags.DEFINE_boolean("is_train", True, "False to inference")
+tf.app.flags.DEFINE_boolean("is_train", False, "False to inference")
 tf.app.flags.DEFINE_string("data_dir", "./MNIST_data", "data dir")
 tf.app.flags.DEFINE_string("train_dir", "./train", "training dir")
 tf.app.flags.DEFINE_integer("inference_version", 0, "the version for inferencing")
@@ -43,7 +51,7 @@ def train_epoch(model, sess, X, y): # Training Process
     while st < len(X) and ed <= len(X):
         X_batch, y_batch = X[st:ed], y[st:ed]
         feed = {model.x_: X_batch, model.y_: y_batch, model.keep_prob: FLAGS.keep_prob}
-        loss_, acc_, _ = sess.run([model.loss, model.acc, model.train_op], feed)
+        loss_, acc_, _, __ = sess.run([model.loss, model.acc, model.train_op, tf.get_collection("update_op")], feed)
         loss += loss_
         acc += acc_
         st, ed = ed, ed+FLAGS.batch_size
@@ -70,7 +78,7 @@ def valid_epoch(model, sess, X, y):  # Valid Process
 
 
 def inference(model, sess, X):  # Test Process
-    return sess.run([model.pred], {model.x_: X})[0]
+    return sess.run([model.pred], {model.x_: X, model.keep_prob: 1.0})[0]
 
 
 with tf.Session() as sess:
@@ -112,6 +120,18 @@ with tf.Session() as sess:
             print("  best validation accuracy:      " + str(best_val_acc))
             print("  test loss:                     " + str(test_loss))
             print("  test accuracy:                 " + str(test_acc))
+
+            rlist=[]
+            rlist.append(epoch_time)
+            rlist.append(mlp_model.learning_rate.eval())
+            rlist.append(train_loss)
+            rlist.append(val_loss)
+            rlist.append(val_acc)
+            rlist.append(best_epoch)
+            rlist.append(best_val_acc)
+            rlist.append(test_loss)
+            rlist.append(test_acc)
+            writer.writerow(rlist)
 
             if train_loss > max(pre_losses):  # Learning rate decay
                 sess.run(mlp_model.learning_rate_decay_op)
