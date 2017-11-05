@@ -16,19 +16,19 @@ class Model:
 
         # TODO:  implement input -- Linear -- BN -- ReLU -- Linear -- loss
         #        the 10-class prediction output is named as "logits"
-        W_fc1 = weight_variable([28 * 28, 1000])
-        b_fc1 = bias_variable([1000])
+        W_fc1 = weight_variable([28 * 28, 2000])
+        b_fc1 = bias_variable([2000])
 
         h_fc1 = tf.matmul(self.x_, W_fc1) + b_fc1
 
         # perform batch-normalization
-        h_bn1 = batch_normalization_layer(h_fc1, isTrain = is_train)
+        #h_bn1 = batch_normalization_layer(h_fc1, isTrain = is_train)
 
-        h_relu1 = tf.nn.relu(h_bn1)
+        h_relu1 = tf.nn.relu(h_fc1)
 
         # h_fc1_drop = tf.nn.dropout(h_fc1, self.keep_prob)
 
-        w_fc2 = weight_variable([1000, 10])
+        w_fc2 = weight_variable([2000, 10])
         b_fc2 = bias_variable([10])
 
         logits = tf.matmul(h_relu1, w_fc2) + b_fc2

@@ -11,10 +11,8 @@ from model import *
 
 if not os.path.exists("csv"):
     os.mkdir("csv")
-c=open("csv/test.csv","w")
+c=open("csv/small_test.csv","w")
 writer=csv.writer(c)
-writer.writerow(['time','learning rate','training loss', 'validation loss', 'validation accuracy', 
-                    'best epoch', 'best validation accuracy', 'test loss', 'test accuracy'])
 
 tf.app.flags.DEFINE_integer("batch_size", 100, "batch size for training")
 tf.app.flags.DEFINE_integer("num_epochs", 100, "number of epochs")
@@ -24,6 +22,22 @@ tf.app.flags.DEFINE_string("data_dir", "./MNIST_data", "data dir")
 tf.app.flags.DEFINE_string("train_dir", "./train", "training dir")
 tf.app.flags.DEFINE_integer("inference_version", 0, "the version for inferencing")
 FLAGS = tf.app.flags.FLAGS
+
+writer.writerow(['batch_size','num_epochs','keep_prob', 'is_train', 'data_dir', 
+                    'train_dir', 'inference_version'])
+
+rlist=[]
+rlist.append(FLAGS.batch_size)
+rlist.append(FLAGS.num_epochs)
+rlist.append(FLAGS.keep_prob)
+rlist.append(FLAGS.is_train)
+rlist.append(FLAGS.data_dir)
+rlist.append(FLAGS.train_dir)
+rlist.append(FLAGS.inference_version)
+writer.writerow(rlist)
+
+writer.writerow(['time','learning rate','training loss', 'validation loss', 'validation accuracy', 
+                    'best epoch', 'best validation accuracy', 'test loss', 'test accuracy'])
 
 
 def shuffle(X, y, shuffle_parts):  # Shuffle the X and y
@@ -152,4 +166,7 @@ with tf.Session() as sess:
             result = inference(mlp_model, sess, test_image)[0]
             if result == y_test[i]:
                 count += 1
+        rlist=[]
+        rlist.append(float(count) / len(X_test))
+        writer.writerow(rlist)
         print("test accuracy: {}".format(float(count) / len(X_test)))
