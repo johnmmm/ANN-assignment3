@@ -92,6 +92,3 @@ def batch_normalization_layer(inputs, isTrain=True):
         inputs = tf.nn.batch_normalization(inputs, mean = ave_mean, variance = ave_var, offset = offset, scale = scale, variance_epsilon = EPSILON)
     
     return inputs
-
-
-

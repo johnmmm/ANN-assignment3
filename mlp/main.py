@@ -9,6 +9,8 @@ from model import Model
 from load_data import load_mnist_2d
 from model import *
 
+if not os.path.exists("csv"):
+    os.mkdir("csv")
 c=open("csv/test.csv","w")
 writer=csv.writer(c)
 writer.writerow(['time','learning rate','training loss', 'validation loss', 'validation accuracy', 
@@ -49,7 +51,7 @@ def train_epoch(model, sess, X, y): # Training Process
     while st < len(X) and ed <= len(X):
         X_batch, y_batch = X[st:ed], y[st:ed]
         feed = {model.x_: X_batch, model.y_: y_batch, model.keep_prob: FLAGS.keep_prob}
-        loss_, acc_, _ = sess.run([model.loss, model.acc, model.train_op], feed)
+        loss_, acc_, _, __ = sess.run([model.loss, model.acc, model.train_op, tf.get_collection("update_op")], feed)
         loss += loss_
         acc += acc_
         st, ed = ed, ed+FLAGS.batch_size
