@@ -8,30 +8,37 @@ from tensorflow.python.training import moving_averages
 class Model:
     def __init__(self,
                  is_train,
-                 learning_rate=0.001,
-                 learning_rate_decay_factor=0.995):
+                 learning_rate=0.0015,
+                 learning_rate_decay_factor=0.92):
         self.x_ = tf.placeholder(tf.float32, [None, 28*28])
         self.y_ = tf.placeholder(tf.int32, [None])
         self.keep_prob = tf.placeholder(tf.float32)
 
         # TODO:  implement input -- Linear -- BN -- ReLU -- Linear -- loss
         #        the 10-class prediction output is named as "logits"
-        W_fc1 = weight_variable([28 * 28, 2000])
-        b_fc1 = bias_variable([2000])
+        W_fc1 = weight_variable([28 * 28, 1000])
+        b_fc1 = bias_variable([1000])
 
         h_fc1 = tf.matmul(self.x_, W_fc1) + b_fc1
 
         # perform batch-normalization
-        #h_bn1 = batch_normalization_layer(h_fc1, isTrain = is_train)
+        h_bn1 = batch_normalization_layer(h_fc1, isTrain = is_train)
 
-        h_relu1 = tf.nn.relu(h_fc1)
+        h_relu1 = tf.nn.relu(h_bn1)
 
-        # h_fc1_drop = tf.nn.dropout(h_fc1, self.keep_prob)
+        w_fc2 = weight_variable([1000, 600])
+        b_fc2 = bias_variable([600])
 
-        w_fc2 = weight_variable([2000, 10])
-        b_fc2 = bias_variable([10])
+        h_fc2 = tf.matmul(h_relu1, w_fc2) + b_fc2
 
-        logits = tf.matmul(h_relu1, w_fc2) + b_fc2
+        h_relu2 = tf.nn.relu(h_fc2)
+
+        h_fc2_drop = tf.nn.dropout(h_relu2, self.keep_prob)
+
+        w_fc3 = weight_variable([600, 10])
+        b_fc3 = bias_variable([10])
+
+        logits = tf.matmul(h_fc2_drop, w_fc3) + b_fc3
 
         self.loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=self.y_, logits=logits))
         self.correct_pred = tf.equal(tf.cast(tf.argmax(logits, 1), tf.int32), self.y_)
@@ -64,7 +71,7 @@ def batch_normalization_layer(inputs, isTrain=True):
     # TODO: implemented the batch normalization func and applied it on fully-connected layers
     EPSILON = 0.001
     SHAPES = inputs.shape[1]
-    MEANDECAY = 0.999
+    MEANDECAY = 0.99
 
     ave_mean = tf.Variable(tf.zeros(shape = [1, SHAPES]), trainable = False)
     ave_var = tf.Variable(tf.zeros(shape = [1, SHAPES]), trainable = False)
