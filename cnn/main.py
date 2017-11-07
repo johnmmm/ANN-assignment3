@@ -11,19 +11,33 @@ from load_data import load_mnist_4d
 
 if not os.path.exists("csv"):
     os.mkdir("csv")
-c=open("csv/dan.csv","w")
+c=open("csv/normalbndrop1_test.csv","w")
 writer=csv.writer(c)
-writer.writerow(['time','learning rate','training loss', 'validation loss', 'validation accuracy', 
-                    'best epoch', 'best validation accuracy', 'test loss', 'test accuracy'])
 
 tf.app.flags.DEFINE_integer("batch_size", 100, "batch size for training")
-tf.app.flags.DEFINE_integer("num_epochs", 20, "number of epochs")
+tf.app.flags.DEFINE_integer("num_epochs", 50, "number of epochs")
 tf.app.flags.DEFINE_float("keep_prob", 0.5, "drop out rate")
 tf.app.flags.DEFINE_boolean("is_train", False, "False to inference")
 tf.app.flags.DEFINE_string("data_dir", "./MNIST_data", "data dir")
 tf.app.flags.DEFINE_string("train_dir", "./train", "training dir")
 tf.app.flags.DEFINE_integer("inference_version", 0, "the param version for inference")
 FLAGS = tf.app.flags.FLAGS
+
+writer.writerow(['batch_size','num_epochs','keep_prob', 'is_train', 'data_dir', 
+                    'train_dir', 'inference_version'])
+
+rlist=[]
+rlist.append(FLAGS.batch_size)
+rlist.append(FLAGS.num_epochs)
+rlist.append(FLAGS.keep_prob)
+rlist.append(FLAGS.is_train)
+rlist.append(FLAGS.data_dir)
+rlist.append(FLAGS.train_dir)
+rlist.append(FLAGS.inference_version)
+writer.writerow(rlist)
+
+writer.writerow(['time','learning rate','training loss', 'validation loss', 'validation accuracy', 
+                    'best epoch', 'best validation accuracy', 'test loss', 'test accuracy'])
 
 
 def shuffle(X, y, shuffle_parts):
@@ -51,7 +65,7 @@ def train_epoch(model, sess, X, y):
     while st < len(X) and ed <= len(X):
         X_batch, y_batch = X[st:ed], y[st:ed]
         feed = {model.x_: X_batch, model.y_: y_batch, model.keep_prob: FLAGS.keep_prob}
-        loss_, acc_, _ = sess.run([model.loss, model.acc, model.train_op], feed)
+        loss_, acc_, _, __ = sess.run([model.loss, model.acc, model.train_op, tf.get_collection("update_op")], feed)
         loss += loss_
         acc += acc_
         st, ed = ed, ed+FLAGS.batch_size
@@ -152,3 +166,6 @@ with tf.Session() as sess:
             if result == y_test[i]:
                 count += 1
         print("test accuracy: {}".format(float(count) / len(X_test)))
+        rlist=[]
+        rlist.append(float(count) / len(X_test))
+        writer.writerow(rlist)
