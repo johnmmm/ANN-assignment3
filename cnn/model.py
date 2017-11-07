@@ -9,7 +9,7 @@ class Model:
     def __init__(self,
                  is_train,
                  learning_rate=0.0015,
-                 learning_rate_decay_factor=0.95):
+                 learning_rate_decay_factor=0.80):
         self.x_ = tf.placeholder(tf.float32, [None, 1, 28, 28])
         self.y_ = tf.placeholder(tf.int32, [None])
         self.keep_prob = tf.placeholder(tf.float32)
@@ -24,9 +24,9 @@ class Model:
         b_conv1 = bias_variable([32])
 
         h_conv1 = conv2d(x, W_conv1) + b_conv1
-        #h_bn1 = batch_normalization_layer(h_conv1)
+        h_bn1 = batch_normalization_layer(h_conv1)
 
-        h_relu1 = tf.nn.relu(h_conv1)
+        h_relu1 = tf.nn.relu(h_bn1)
         h_pool1 = max_pool_2x2(h_relu1)
 
         #第二个卷积
@@ -34,9 +34,9 @@ class Model:
         b_conv2 = bias_variable([64])
 
         h_conv2 = conv2d(h_pool1, W_conv2) + b_conv2
-        #h_bn2 = batch_normalization_layer(h_conv2)
+        h_bn2 = batch_normalization_layer(h_conv2)
 
-        h_relu2 = tf.nn.relu(h_conv2)
+        h_relu2 = tf.nn.relu(h_bn2)
         h_pool2 = max_pool_2x2(h_relu2)
 
         #Linear
@@ -79,7 +79,7 @@ def batch_normalization_layer(inputs, isTrain=True):
     # hint: you can add extra parameters (e.g., shape) if necessary
     EPSILON = 0.001
     CHANNEL = inputs.shape[3]
-    MEANDECAY = 0.999
+    MEANDECAY = 0.99
 
     ave_mean = tf.Variable(tf.zeros(shape = [1, CHANNEL]), trainable = False)
     ave_var = tf.Variable(tf.zeros(shape = [1, CHANNEL]), trainable = False)
