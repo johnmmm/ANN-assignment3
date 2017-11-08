@@ -16,8 +16,8 @@ class Model:
 
         # TODO:  implement input -- Linear -- BN -- ReLU -- Linear -- loss
         #        the 10-class prediction output is named as "logits"
-        W_fc1 = weight_variable([28 * 28, 1000])
-        b_fc1 = bias_variable([1000])
+        W_fc1 = weight_variable([28 * 28, 2000])
+        b_fc1 = bias_variable([2000])
 
         h_fc1 = tf.matmul(self.x_, W_fc1) + b_fc1
 
@@ -26,19 +26,22 @@ class Model:
 
         h_relu1 = tf.nn.relu(h_bn1)
 
-        w_fc2 = weight_variable([1000, 600])
-        b_fc2 = bias_variable([600])
+        w_fc2 = weight_variable([2000, 10])
+        b_fc2 = bias_variable([10])
 
-        h_fc2 = tf.matmul(h_relu1, w_fc2) + b_fc2
+        # w_fc2 = weight_variable([1000, 600])
+        # b_fc2 = bias_variable([600])
 
-        h_relu2 = tf.nn.relu(h_fc2)
+        # h_fc2 = tf.matmul(h_relu1, w_fc2) + b_fc2
 
-        h_fc2_drop = tf.nn.dropout(h_relu2, self.keep_prob)
+        # h_relu2 = tf.nn.relu(h_fc2)
 
-        w_fc3 = weight_variable([600, 10])
-        b_fc3 = bias_variable([10])
+        # h_fc2_drop = tf.nn.dropout(h_relu2, self.keep_prob)
 
-        logits = tf.matmul(h_fc2_drop, w_fc3) + b_fc3
+        # w_fc3 = weight_variable([600, 10])
+        # b_fc3 = bias_variable([10])
+
+        logits = tf.matmul(h_relu1, w_fc2) + b_fc2
 
         self.loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=self.y_, logits=logits))
         self.correct_pred = tf.equal(tf.cast(tf.argmax(logits, 1), tf.int32), self.y_)

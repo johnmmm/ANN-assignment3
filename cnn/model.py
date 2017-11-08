@@ -9,7 +9,7 @@ class Model:
     def __init__(self,
                  is_train,
                  learning_rate=0.0015,
-                 learning_rate_decay_factor=0.85):
+                 learning_rate_decay_factor=0.90):
         self.x_ = tf.placeholder(tf.float32, [None, 1, 28, 28])
         self.y_ = tf.placeholder(tf.int32, [None])
         self.keep_prob = tf.placeholder(tf.float32)
@@ -44,8 +44,8 @@ class Model:
         b_fc1 = bias_variable([10])
 
         h_pool2_flat = tf.reshape(h_pool2, [-1, 7*7*32])
-        #h_fc1_drop = tf.nn.dropout(h_pool2_flat, self.keep_prob)
-        logits = tf.matmul(h_pool2_flat, W_fc1) + b_fc1
+        h_fc1_drop = tf.nn.dropout(h_pool2_flat, self.keep_prob)
+        logits = tf.matmul(h_fc1_drop, W_fc1) + b_fc1
 
         self.loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=self.y_, logits=logits))
         self.correct_pred = tf.equal(tf.cast(tf.argmax(logits, 1), tf.int32), self.y_)
