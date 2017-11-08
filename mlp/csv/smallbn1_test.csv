@@ -1,0 +1,4 @@
+batch_size,num_epochs,keep_prob,is_train,data_dir,train_dir,inference_version
+100,100,0.5,False,./MNIST_data,./train,0
+time,learning rate,training loss,validation loss,validation accuracy,best epoch,best validation accuracy,test loss,test accuracy
+0.9824

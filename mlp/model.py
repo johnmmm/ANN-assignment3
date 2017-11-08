@@ -80,12 +80,9 @@ def batch_normalization_layer(inputs, isTrain=True):
     axis = list(range(len(inputs_shape) - 1))
     mean, var = tf.nn.moments(inputs, axes = axis, keep_dims = True)
 
-    #batch_size = tf.to_float(tf.shape(inputs)[0])
-
     update_mean_op = moving_averages.assign_moving_average(ave_mean, mean, MEANDECAY)
     update_var_op = moving_averages.assign_moving_average(ave_var, var, MEANDECAY)
-    # update_mean_op = ave_mean.assign(ave_mean * MEANDECAY + mean * (1. - MEANDECAY))
-    # update_var_op = ave_var.assign(ave_var * MEANDECAY + var * batch_size / (batch_size - 1.) * (1. - MEANDECAY))
+
     tf.add_to_collection("update_op", update_mean_op)
     tf.add_to_collection("update_op", update_var_op)
     
