@@ -9,7 +9,7 @@ class Model:
     def __init__(self,
                  is_train,
                  learning_rate=0.0015,
-                 learning_rate_decay_factor=0.90):
+                 learning_rate_decay_factor=0.85):
         self.x_ = tf.placeholder(tf.float32, [None, 1, 28, 28])
         self.y_ = tf.placeholder(tf.int32, [None])
         self.keep_prob = tf.placeholder(tf.float32)
